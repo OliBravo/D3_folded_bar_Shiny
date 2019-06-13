@@ -11,7 +11,12 @@ ui <- fluidPage(
   
   actionButton("reset", "< Back"),
   
-  d3Output("myPlot")  
+  fluidRow(
+    column(4,
+           d3Output("myPlot")  
+           )
+  )
+    
 )
 
 server <- function(input, output, session) {
@@ -38,6 +43,7 @@ server <- function(input, output, session) {
   observeEvent(input$reset, {
     print("reset")
     data_to_plot$df <- DF[[1]]$value / max(DF[[1]]$value)
+    data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")
   })
   
   observeEvent(input$bar_clicked, {
@@ -45,6 +51,7 @@ server <- function(input, output, session) {
     df <- df[df$month == month.name[as.numeric(input$bar_clicked) + 1], ]
     print(df)
     data_to_plot$df <- df$value / max(df$value)
+    data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")
   })
   
   
@@ -53,8 +60,7 @@ server <- function(input, output, session) {
     validate(
       need(data_to_plot$df, FALSE)
     )
-    print(data_to_plot$df)
-    r2d3(data_to_plot$df, script = "bar_plot.js")
+    data_to_plot$df
   })
 }
 
