@@ -1,60 +1,101 @@
-// !preview r2d3 data=c(0.3, 0.6, 0.8, 0.95, 0.40, 0.20)
+var layer_left      = 0.35;
+    layer_left_text = 0.01;
+    layer_top       = 0.1;
+    layer_height    = 0.85;
+    layer_width     = 0.55;
 
-var barHeight = Math.floor(height / data.length);
+var col_left_text   = width * layer_left_text;
 
-var bars = r2d3.svg.selectAll('rect')
-  .data(data);
+function svg_height() {return parseInt(svg.style('height'))}
+function svg_width()  {return parseInt(svg.style('width'))}
 
-bars.enter()
-  .append('rect')
-    .attr('width', function(d) { return d.value * width; })
-    .attr('height', barHeight)
-    .attr('y', function(d, i) { return i * barHeight; })
-    .attr('fill', 'steelblue')
-    .attr('dx', function(d) { return d.month })
-    .attr("fill", "orange")
+function col_top()  {return svg_height() * layer_top; }
+function col_left() {return svg_width()  * layer_left;}
+
+function actual_max() {return d3.max(data, function (d) {return d.value; }); }
+function col_width()  {return (svg_width() / actual_max()) * layer_width; }
+function col_heigth() {return svg_height() / data.length * layer_height; }
+
+var bars = svg.selectAll('rect').data(data);
+
+bars.enter().append('rect')
+    .attr('width', function(d) { return d.value * col_width(); })
+    .attr('height',col_heigth() * 0.9)
+    .attr('y', function(d, i) { return i * col_heigth() + col_top(); })
+    .attr('x', col_left())
+    .attr('fill', '#c4154f')
+    .attr('opacity', function(d) { return d.value / (actual_max()*0.6 ); })
+    .attr('tip', function(d) { return (d.value * col_width()) + col_left(); })
+    .attr("d", function(d) { return d.month; })
     .on("click", function(){
       Shiny.setInputValue(
         "bar_clicked", 
-        d3.select(this).attr("dx"),
+        d3.select(this).attr("d"),
         {priority: "event"}
       );
+    })    
+    .on("mouseover", function(){
+        d3.select(this)
+          .attr('fill', '#ffb14e');
+    })
+    .on("mouseout", function(){
+        d3.select(this)
+          .attr('fill', '#c4154f');
     });
-  //.on("mouseover", function() { console.log(d3.select(this).attr('width')) });
-
 
 bars.exit().remove();
 
-  
-// A function that create / update the plot for a given variable:
-function update(data) {
+bars.transition()
+  .duration(500)
+    .attr('width', function(d) { return d.value * col_width(); })
+    .attr('height',col_heigth() * 0.9)
+    .attr('y', function(d, i) { return i * col_heigth() + col_top(); })
+    .attr('x', col_left())
+    .attr('opacity', function(d) { return d.value / (actual_max()*0.6 ); })
+    .attr('tip', function(d) { return (d.value * col_width()) + col_left(); });
 
-  // Update the X axis
-  x.domain(data.map(function(d) { return d.month; }))
-  xAxis.call(d3.axisBottom(x))
+// Identity labels
 
-  // Update the Y axis
-  y.domain([0, d3.max(data, function(d) { return d.value }) ]);
-  yAxis.transition().duration(1000).call(d3.axisLeft(y));
+var txt = svg.selectAll('text').data(data);
 
-  // Create the u variable
-  var u = svg.selectAll("rect")
-    .data(data)
+txt.enter().append('text')
+      .attr('x', col_left_text)
+      .attr('y', function(d, i) { return i * col_heigth() + (col_heigth() / 2) + col_top(); })
+      .text(function(d) {return d.label; })
+      .style('font-size', '14px') 
+      .style('font-weight', 'bold') 
+      .style('font-family', 'sans-serif');  
+      
+txt.exit().remove();
 
-  u
-    .enter()
-    .append("rect") // Add a new rect for each new elements
-    .merge(u) // get the already existing elements as well
-    .transition() // and apply changes to all of them
-    .duration(1000)
-      .attr("x", function(d) { return x(d.month); })
-      .attr("y", function(d) { return y(d.value); })
-      .attr("width", x.bandwidth())
-      .attr("height", function(d) { return height - y(d.value); })
-      .attr("fill", "#69b3a2")
+txt.transition()
+  .duration(1000)
+      .attr('x', col_left_text)
+      .attr('y', function(d, i) { return i * col_heigth() + (col_heigth() / 2) + col_top(); })
+      .attr("d", function(d) { return d.month; })
+      .style('font-size', '14px') 
+      .style('font-weight', 'bold') 
+      .style('font-family', 'sans-serif')
+      .text(function(d) {return d.label; });  
 
-  // If less group in the new dataset, I delete the ones not in use anymore
-  u
-    .exit()
-    .remove()
-}
+// Numeric labels
+
+var totals = svg.selectAll().data(data);
+
+totals.enter().append('text')
+      .attr('x', function(d) { return ((d.value * col_width()) + col_left()) * 1.01; })
+      .attr('y', function(d, i) { return i * col_heigth() + (col_heigth() / 2) + col_top(); })
+      .style('font-size', '14px') 
+      .style('font-weight', 'bold') 
+      .style('font-family', 'sans-serif')
+      .text(function(d) {return d.value; });  
+      
+totals.exit().remove();
+
+totals.transition()
+  .duration(1000)
+      .attr('x', function(d) { return ((d.value * col_width()) + col_left()) * 1.01; })
+      .attr('y', function(d, i) { return i * col_heigth() + (col_heigth() / 2) + col_top(); })
+      .attr("d", function(d) { return d.month; })
+      .text(function(d) {return d.value; });
+      

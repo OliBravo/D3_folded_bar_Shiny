@@ -58,7 +58,8 @@ server <- function(input, output, session) {
       df <- DF[[2]]
       df <- df[df$month == input$bar_clicked, ]
       print(df)
-      data_to_plot$df <- df$value / max(df$value)
+      data_to_plot$df <- df
+      data_to_plot$df$value <- df$value / max(df$value)
       data_to_plot$mode <-  "detailed"
       data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")  
     }
