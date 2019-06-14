@@ -5,32 +5,56 @@ var barHeight = Math.floor(height / data.length);
 var bars = r2d3.svg.selectAll('rect')
   .data(data);
 
-bars.enter().append('rect')
-  .attr('width', function(d) { return d * width; })
-  .attr('height', barHeight)
-  .attr('y', function(d, i) { return i * 22; })
-  .attr('fill', 'steelblue')
-  .attr('dx', function(d, i) { return i })
-  .attr("fill", "orange")
-  .on("click", function(){
-    Shiny.setInputValue(
-      "bar_clicked", 
-      d3.select(this).attr("dx"),
-      {priority: "event"}
-    );
-  });
+bars.enter()
+  .append('rect')
+    .attr('width', function(d) { return d.value * width; })
+    .attr('height', barHeight)
+    .attr('y', function(d, i) { return i * barHeight; })
+    .attr('fill', 'steelblue')
+    .attr('dx', function(d) { return d.month })
+    .attr("fill", "orange")
+    .on("click", function(){
+      Shiny.setInputValue(
+        "bar_clicked", 
+        d3.select(this).attr("dx"),
+        {priority: "event"}
+      );
+    });
   //.on("mouseover", function() { console.log(d3.select(this).attr('width')) });
-  
+
 
 bars.exit().remove();
 
-bars.transition()
-  .duration(100)
-  .attr("width", function(d) { return d * width; });
-
   
-//bars.transition()
-//  .duration(500)
-//    .attr('width', function(d) { return d.y; })
-//    .attr('height',col_heigth() * 0.9)
-//    .attr('y', function(d, i) { return i; });
+// A function that create / update the plot for a given variable:
+function update(data) {
+
+  // Update the X axis
+  x.domain(data.map(function(d) { return d.month; }))
+  xAxis.call(d3.axisBottom(x))
+
+  // Update the Y axis
+  y.domain([0, d3.max(data, function(d) { return d.value }) ]);
+  yAxis.transition().duration(1000).call(d3.axisLeft(y));
+
+  // Create the u variable
+  var u = svg.selectAll("rect")
+    .data(data)
+
+  u
+    .enter()
+    .append("rect") // Add a new rect for each new elements
+    .merge(u) // get the already existing elements as well
+    .transition() // and apply changes to all of them
+    .duration(1000)
+      .attr("x", function(d) { return x(d.month); })
+      .attr("y", function(d) { return y(d.value); })
+      .attr("width", x.bandwidth())
+      .attr("height", function(d) { return height - y(d.value); })
+      .attr("fill", "#69b3a2")
+
+  // If less group in the new dataset, I delete the ones not in use anymore
+  u
+    .exit()
+    .remove()
+}

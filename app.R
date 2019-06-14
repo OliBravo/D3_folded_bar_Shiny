@@ -37,21 +37,31 @@ server <- function(input, output, session) {
   DF <- list(monthly, detailed)
   
   
-  data_to_plot <- reactiveValues(df = NULL)
+  data_to_plot <- reactiveValues(df = {
+    tdf <- DF[[1]]
+    tdf$value <- DF[[1]]$value / max(DF[[1]]$value)
+    tdf
+    },
+    mode = "monthly")
   
   
   observeEvent(input$reset, {
     print("reset")
-    data_to_plot$df <- DF[[1]]$value / max(DF[[1]]$value)
+    data_to_plot$df <- DF[[1]]
+    data_to_plot$df$value <- DF[[1]]$value / max(DF[[1]]$value)
+    data_to_plot$mode <- "monthly"
     data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")
   })
   
   observeEvent(input$bar_clicked, {
-    df <- DF[[2]]
-    df <- df[df$month == month.name[as.numeric(input$bar_clicked) + 1], ]
-    print(df)
-    data_to_plot$df <- df$value / max(df$value)
-    data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")
+    if (data_to_plot$mode == "monthly") {
+      df <- DF[[2]]
+      df <- df[df$month == input$bar_clicked, ]
+      print(df)
+      data_to_plot$df <- df$value / max(df$value)
+      data_to_plot$mode <-  "detailed"
+      data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")  
+    }
   })
   
   
@@ -60,6 +70,7 @@ server <- function(input, output, session) {
     validate(
       need(data_to_plot$df, FALSE)
     )
+    
     data_to_plot$df
   })
 }
