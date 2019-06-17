@@ -40,6 +40,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$reset, {
     print("reset")
+    shinyjs::hide("reset")
     data_to_plot$df <- DF[[1]]
     # data_to_plot$df$value <- DF[[1]]$value / max(DF[[1]]$value)
     data_to_plot$mode <- "monthly"
@@ -48,8 +49,6 @@ server <- function(input, output, session) {
   
   observeEvent(input$bar_clicked, {
     cond <- data_to_plot$mode == "monthly"
-    shinyjs::toggle("reset", !cond)
-    
     if (cond) {
       df <- DF[[2]]
       df <- df[df$month == input$bar_clicked, ]
@@ -57,9 +56,10 @@ server <- function(input, output, session) {
       data_to_plot$df <- df
       # data_to_plot$df$value <- df$value / max(df$value)
       data_to_plot$mode <-  "detailed"
+      shinyjs::show("reset")
       data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")  
     }
-  })
+  }, ignoreInit = TRUE)
   
   
   
