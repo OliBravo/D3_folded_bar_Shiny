@@ -1,15 +1,14 @@
 library(shiny)
+library(shinyjs)
 library(r2d3)
 library(dplyr)
 
 ui <- fluidPage(
-  numericInput("sampleSize",
-               "Sample size:",
-               value = 10,
-               min = 5, max = 100,
-               step = 5),
   
-  actionButton("reset", "< Back"),
+  useShinyjs(),
+  
+  
+  hidden(actionButton("reset", "< Back")),
   
   fluidRow(
     column(4,
@@ -37,29 +36,26 @@ server <- function(input, output, session) {
   DF <- list(monthly, detailed)
   
   
-  data_to_plot <- reactiveValues(df = {
-    tdf <- DF[[1]]
-    tdf$value <- DF[[1]]$value / max(DF[[1]]$value)
-    tdf
-    },
-    mode = "monthly")
-  
+  data_to_plot <- reactiveValues(df = DF[[1]], mode = "monthly")
   
   observeEvent(input$reset, {
     print("reset")
     data_to_plot$df <- DF[[1]]
-    data_to_plot$df$value <- DF[[1]]$value / max(DF[[1]]$value)
+    # data_to_plot$df$value <- DF[[1]]$value / max(DF[[1]]$value)
     data_to_plot$mode <- "monthly"
     data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")
-  })
+  }, ignoreInit = FALSE, ignoreNULL = FALSE)
   
   observeEvent(input$bar_clicked, {
-    if (data_to_plot$mode == "monthly") {
+    cond <- data_to_plot$mode == "monthly"
+    shinyjs::toggle("reset", !cond)
+    
+    if (cond) {
       df <- DF[[2]]
       df <- df[df$month == input$bar_clicked, ]
       print(df)
       data_to_plot$df <- df
-      data_to_plot$df$value <- df$value / max(df$value)
+      # data_to_plot$df$value <- df$value / max(df$value)
       data_to_plot$mode <-  "detailed"
       data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")  
     }
