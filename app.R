@@ -22,7 +22,7 @@ ui <- dashboardPage(
     useShinyjs(),
     
     div(
-      h3("This is a right place to revise Your media spendings for the last year."),
+      h3("This is the right place to revise Your media spendings in the last year."),
       helpText("Click a bar to drill down spendings.")
     ),
     
@@ -30,9 +30,11 @@ ui <- dashboardPage(
       fluidRow(
         column(6,
                d3Output("myPlot")  
+        ),
+        column(6,
+               disabled(actionButton("reset", "< Back"))
         )
-      ),
-      disabled(actionButton("reset", "< Back"))
+      )
     )
   )
 )
