@@ -1,22 +1,43 @@
 library(shiny)
+library(shinydashboard)
 library(shinyjs)
 library(r2d3)
 library(dplyr)
 
-ui <- fluidPage(
+ui <- dashboardPage(
+  dashboardHeader(
+    title = "Media Spendings"
+  ),
   
-  useShinyjs(),
+  dashboardSidebar(
+    disable = TRUE
+  ),
   
-  
-  disabled(actionButton("reset", "< Back")),
-  
-  fluidRow(
-    column(4,
-           d3Output("myPlot")  
-           )
-  )
+  dashboardBody(
     
+    tags$head(
+      tags$link(rel="stylesheet", type="text/css", href="www/style.css")
+    ),
+    
+    useShinyjs(),
+    
+    div(
+      h3("This is a right place to revise Your media spendings for the last year."),
+      helpText("Click a bar to drill down spendings.")
+    ),
+    
+    div(
+      fluidRow(
+        column(6,
+               d3Output("myPlot")  
+        )
+      ),
+      disabled(actionButton("reset", "< Back"))
+    )
+  )
 )
+
+
 
 server <- function(input, output, session) {
   
