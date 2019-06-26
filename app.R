@@ -8,7 +8,7 @@ ui <- fluidPage(
   useShinyjs(),
   
   
-  hidden(actionButton("reset", "< Back")),
+  disabled(actionButton("reset", "< Back")),
   
   fluidRow(
     column(4,
@@ -23,14 +23,16 @@ server <- function(input, output, session) {
   monthly <- data.frame(
     month = factor(month.name, levels = month.name),
     value = sample(1000:2000, 12)
-  )
+  ) %>% 
+    mutate(label = month)
   
   detailed <- expand.grid(
     month = factor(month.name, levels = month.name),
     channel = c("tv", "print", "internet", "poster", "youtube", "trade press", "radio", "cinema")
   ) %>% 
     as.data.frame() %>% 
-    mutate(value = sample(x = 100:500, size = nrow(.)))
+    mutate(value = sample(x = 100:500, size = nrow(.)),
+           label = channel)
   
   
   DF <- list(monthly, detailed)
@@ -40,7 +42,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$reset, {
     print("reset")
-    shinyjs::hide("reset")
+    shinyjs::disable("reset")
     data_to_plot$df <- DF[[1]]
     # data_to_plot$df$value <- DF[[1]]$value / max(DF[[1]]$value)
     data_to_plot$mode <- "monthly"
@@ -56,7 +58,7 @@ server <- function(input, output, session) {
       data_to_plot$df <- df
       # data_to_plot$df$value <- df$value / max(df$value)
       data_to_plot$mode <-  "detailed"
-      shinyjs::show("reset")
+      shinyjs::enable("reset")
       data_to_plot$df <- r2d3(data_to_plot$df, script = "bar_plot.js")  
     }
   }, ignoreInit = TRUE)
